@@ -19,22 +19,17 @@ struct MainDashboard {
   build() {
     Stack() {
       // 背景图片
-      Image($r('app.media.home_background'))
+      Column()
         .width('100%')
         .height('100%')
-        .objectFit(ImageFit.Cover)
+        .backgroundImage($r('app.media.home_background'))
+        .backgroundImageSize(ImageSize.Cover)
 
       // 渐变遮罩
       Column()
         .width('100%')
         .height('100%')
-        .linearGradient({
-          direction: GradientDirection.Bottom,
-          colors: [
-            [0x000000, 0.3],
-            [0x000000, 0.0]
-          ]
-        })
+        .backgroundColor('rgba(0,0,0,0.2)')
 
       Column() {
         // 顶部欢迎区域

@@ -19,22 +19,17 @@ struct LightControl {
   build() {
     Stack() {
       // 背景图片
-      Image($r('app.media.light_bg'))
+      Column()
         .width('100%')
         .height('100%')
-        .objectFit(ImageFit.Cover)
+        .backgroundImage($r('app.media.light_bg'))
+        .backgroundImageSize(ImageSize.Cover)
 
       // 渐变遮罩
       Column()
         .width('100%')
         .height('100%')
-        .linearGradient({
-          direction: GradientDirection.Bottom,
-          colors: [
-            [0x000000, 0.9],
-            [0x000000, 0.0]
-          ]
-        })
+        .backgroundColor('rgba(0,0,0,0.2)')
 
       Column() {
         // 顶部导航
