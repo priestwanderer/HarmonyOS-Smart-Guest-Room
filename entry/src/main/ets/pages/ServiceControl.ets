@@ -150,25 +150,11 @@ struct ServiceControl {
             Column() {
               Row() {
                 Image($r('app.media.service_btn_sos_bg'))
-                  .width(140)
+                  .width('100%')
                   .height(140)
-                  .objectFit(ImageFit.Cover)
-
-                Column() {
-                  Text('SOS')
-                    .fontSize(36)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor('#FFFFFF')
-
-                  Text('紧急呼叫')
-                    .fontSize(14)
-                    .fontColor('#FFFFFF')
-                    .opacity(0.8)
-                    .margin({ top: 8 })
-                }
-                .position({ left: 35, top: 45 })
+                  .objectFit(ImageFit.Contain)
               }
-              .width(140)
+              .width('100%')
               .height(140)
               .onClick(() => {
                 // SOS 紧急呼叫功能
@@ -184,7 +170,7 @@ struct ServiceControl {
                 });
               })
             }
-            .width(140)
+            .width('90%')
             .height(140)
             .margin({ bottom: 40 })
 
@@ -195,7 +181,7 @@ struct ServiceControl {
                 .height(56)
                 .objectFit(ImageFit.Cover)
 
-              Text('退出登录')
+              Text('')
                 .fontSize(18)
                 .fontWeight(FontWeight.Medium)
                 .fontColor('#000000')
