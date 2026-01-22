@@ -1,7 +1,6 @@
 import { RoomViewModel } from '../viewmodel/RoomViewModel';
-import { DeviceSwitch } from '../view/DeviceSwitch';
-import { ControlPanel } from '../view/ControlPanel';
 import router from '@ohos.router';
+import promptAction from '@ohos.promptAction';
 
 @Entry
 @ComponentV2
@@ -24,7 +23,18 @@ struct ServiceControl {
         .width('100%')
         .height('100%')
         .objectFit(ImageFit.Cover)
-        
+
+      // 渐变遮罩
+      Column()
+        .width('100%')
+        .height('100%')
+        .linearGradient({
+          direction: GradientDirection.Bottom,
+          colors: [
+            [0x000000, 0.9],
+            [0x000000, 0.0]
+          ]
+        })
 
       Column() {
         // 顶部导航
@@ -32,7 +42,6 @@ struct ServiceControl {
           Image($r('app.media.light_icon_back'))
             .width(24)
             .height(24)
-            .margin({ right: 20 })
             .onClick(() => {
               router.back();
             })
@@ -42,172 +51,259 @@ struct ServiceControl {
             .fontWeight(FontWeight.Bold)
             .fontColor('#FFFFFF')
         }
-        .width('100%')
+        .width('90%')
         .justifyContent(FlexAlign.SpaceBetween)
-        .padding({ left: 20, right: 20 })
-        .margin({ top: 20, bottom: 40 })
+        .margin({ top: 40, bottom: 20 })
 
-        // 请勿打扰卡片
-        Column() {
-          Text('请勿打扰')
-            .fontSize(18)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#FFFFFF')
-            .margin({ bottom: 16 })
-
-          Row() {
-            Image($r('app.media.service_icon_do_not_disturb'))
-              .width(40)
-              .height(40)
-              .margin({ right: 16 })
-
+        Scroll() {
+          Column() {
+            // 请勿打扰卡片
             Column() {
-              Text('请勿打扰')
-                .fontSize(16)
-                .fontWeight(FontWeight.Bold)
-                .fontColor('#FFFFFF')
-                .margin({ bottom: 4 })
+              Row() {
+                // 图标
+                Image($r('app.media.service_icon_do_not_disturb'))
+                  .width(40)
+                  .height(40)
 
-              Text(this.viewModel.roomModel.service.doNotDisturb ? '已开启' : '已关闭')
-                .fontSize(14)
-                .fontColor('#FFFFFF')
-                .opacity(0.7)
-            }
-            .alignItems(HorizontalAlign.Start)
-            .margin({ right: 20 })
+                // 标题和状态
+                Column() {
+                  Text('请勿打扰')
+                    .fontSize(18)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor('#FFFFFF')
 
-            DeviceSwitch({
-              isOpened: this.viewModel.roomModel.service.doNotDisturb,
-              onChange: (value: boolean) => {
-                this.viewModel.toggleDoNotDisturb();
+                  Text(this.viewModel.roomModel.service.doNotDisturb ? '已开启' : '已关闭')
+                    .fontSize(14)
+                    .fontColor('#FFFFFF')
+                    .opacity(0.7)
+                    .margin({ top: 4 })
+                }
+                .alignItems(HorizontalAlign.Center)
+                .margin({ left: 16 })
+
+                Blank()
+
+                // 开关
+                Image(this.viewModel.roomModel.service.doNotDisturb
+                  ? $r('app.media.service_toggle_dots_bg')
+                  : $r('app.media.service_toggle_bg'))
+                  .width(60)
+                  .height(32)
+                  .objectFit(ImageFit.Contain)
+                  .onClick(() => {
+                    this.viewModel.toggleDoNotDisturb();
+                  })
               }
+              .width('100%')
+              .padding(16)
+            }
+            .width('90%')
+            .height(80)
+            .backgroundImage($r('app.media.service_do_not_disturb_bg'))
+            .backgroundImageSize(ImageSize.Cover)
+            .borderRadius(16)
+            .margin({ bottom: 20 })
+
+            // 清理房间卡片
+            Column() {
+              Row() {
+                // 图标
+                Image($r('app.media.service_icon_clean_room'))
+                  .width(40)
+                  .height(40)
+
+                // 标题和状态
+                Column() {
+                  Text('清理房间')
+                    .fontSize(18)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor('#FFFFFF')
+
+                  Text(this.viewModel.roomModel.service.cleanRoom ? '已请求' : '未请求')
+                    .fontSize(14)
+                    .fontColor('#FFFFFF')
+                    .opacity(0.7)
+                    .margin({ top: 4 })
+                }
+                .alignItems(HorizontalAlign.Center)
+                .margin({ left: 16 })
+
+                Blank()
+
+                // 开关
+                Image(this.viewModel.roomModel.service.cleanRoom
+                  ? $r('app.media.service_toggle_dots_bg')
+                  : $r('app.media.service_toggle_bg'))
+                  .width(60)
+                  .height(32)
+                  .objectFit(ImageFit.Contain)
+                  .onClick(() => {
+                    this.viewModel.toggleCleanRoom();
+                  })
+              }
+              .width('100%')
+              .padding(16)
+            }
+            .width('90%')
+            .height(80)
+            .backgroundImage($r('app.media.service_clean_room_bg'))
+            .backgroundImageSize(ImageSize.Cover)
+            .borderRadius(16)
+            .margin({ bottom: 40 })
+
+            // SOS 紧急呼叫按钮
+            Column() {
+              Row() {
+                Image($r('app.media.service_btn_sos_bg'))
+                  .width(140)
+                  .height(140)
+                  .objectFit(ImageFit.Cover)
+
+                Column() {
+                  Text('SOS')
+                    .fontSize(36)
+                    .fontWeight(FontWeight.Bold)
+                    .fontColor('#FFFFFF')
+
+                  Text('紧急呼叫')
+                    .fontSize(14)
+                    .fontColor('#FFFFFF')
+                    .opacity(0.8)
+                    .margin({ top: 8 })
+                }
+                .position({ left: 35, top: 45 })
+              }
+              .width(140)
+              .height(140)
+              .onClick(() => {
+                // SOS 紧急呼叫功能
+                promptAction.showDialog({
+                  title: '紧急呼叫',
+                  message: '已发送紧急呼叫请求，工作人员将尽快到达',
+                  buttons: [
+                    {
+                      text: '确定',
+                      color: '#FF3333'
+                    }
+                  ]
+                });
+              })
+            }
+            .width(140)
+            .height(140)
+            .margin({ bottom: 40 })
+
+            // 退房按钮
+            Column() {
+              Image($r('app.media.service_btn_logout'))
+                .width(200)
+                .height(56)
+                .objectFit(ImageFit.Cover)
+
+              Text('退出登录')
+                .fontSize(18)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#000000')
+                .position({ left: 60, top: 18 })
+            }
+            .width(200)
+            .height(56)
+            .margin({ bottom: 40 })
+            .onClick(() => {
+              this.viewModel.reset();
+              router.replaceUrl({
+                url: 'pages/Index'
+              });
             })
           }
-          .width('100%')
-          .justifyContent(FlexAlign.SpaceBetween)
-          .alignItems(VerticalAlign.Center)
         }
         .width('100%')
-        .padding(20)
-        .borderRadius(16)
-        .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
-        .backgroundColor('rgba(0,0,0,0)')
-        .linearGradient({
-          direction: GradientDirection.Bottom,
-          colors: [
-            [0x000000, 0.7],
-            [0x000000, 1.0]
-          ]
-        })
-        .margin({ bottom: 30 })
+        .layoutWeight(1)
+        .scrollBar(BarState.Off)
 
-        // 清理房间卡片
-        Column() {
-          Text('客房服务')
-            .fontSize(18)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#FFFFFF')
-            .margin({ bottom: 16 })
-
-          Row() {
-            Image($r('app.media.service_icon_clean_room'))
-              .width(40)
-              .height(40)
-              .margin({ right: 16 })
-
-            Column() {
-              Text('清理房间')
-                .fontSize(16)
-                .fontWeight(FontWeight.Bold)
-                .fontColor('#FFFFFF')
-                .margin({ bottom: 4 })
-
-              Text(this.viewModel.roomModel.service.cleanRoom ? '已请求' : '未请求')
-                .fontSize(14)
-                .fontColor('#FFFFFF')
-                .opacity(0.7)
-            }
-            .alignItems(HorizontalAlign.Start)
-            .margin({ right: 20 })
-
-            DeviceSwitch({
-              isOpened: this.viewModel.roomModel.service.cleanRoom,
-              onChange: (value: boolean) => {
-                this.viewModel.toggleCleanRoom();
-              }
-            })
+        // 底部导航栏
+        Row() {
+          // 首页
+          Column() {
+            Image($r('app.media.tabs_icon_home_unselect'))
+              .width(32)
+              .height(32)
+            Text('首页')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+              .margin({ top: 4 })
           }
-          .width('100%')
-          .justifyContent(FlexAlign.SpaceBetween)
-          .alignItems(VerticalAlign.Center)
-        }
-        .width('100%')
-        .padding(20)
-        .borderRadius(16)
-        .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
-        .backgroundColor('rgba(0,0,0,0)')
-        .linearGradient({
-          direction: GradientDirection.Bottom,
-          colors: [
-            [0x000000, 0.7],
-            [0x000000, 1.0]
-          ]
-        })
-        .margin({ bottom: 40 })
-
-        // SOS 紧急呼叫按钮
-        Column() {
-          Row() {
-            Column() {
-              Text('SOS')
-                .fontSize(24)
-              Text('????')
-                .fontSize(12)
-                .fontColor('#FFFFFF')
-                .margin({ top: 4 })
-            }
-          }
-          .width(120)
-          .height(120)
-          .borderRadius(60)
-          .backgroundColor('#FF0000')
+          .width('25%')
+          .height(60)
           .justifyContent(FlexAlign.Center)
-          .alignItems(VerticalAlign.Center)
           .onClick(() => {
-            // SOS 紧急呼叫功能
-            console.info('???????');
-          })
-        }
-        .margin({ bottom: 40 })
-
-        // 登出按钮
-        Button('????')
-          .width(200)
-          .height(48)
-          .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#000000')
-          .backgroundColor(Color.White)
-          .borderRadius(24)
-          .onClick(() => {
-            this.viewModel.reset();
-            router.replaceUrl({
-              url: 'pages/Index'
+            router.pushUrl({ url: 'pages/MainDashboard' }).catch((err: Error) => {
+              console.error('Navigation failed:', err.message);
             });
           })
+
+          // 灯光
+          Column() {
+            Image($r('app.media.tabs_icon_light_unselect'))
+              .width(32)
+              .height(32)
+            Text('灯光')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+              .margin({ top: 4 })
+          }
+          .width('25%')
+          .height(60)
+          .justifyContent(FlexAlign.Center)
+          .onClick(() => {
+            router.pushUrl({ url: 'pages/LightControl' }).catch((err: Error) => {
+              console.error('Navigation failed:', err.message);
+            });
+          })
+
+          // 窗帘
+          Column() {
+            Image($r('app.media.tabs_icon_curtain_unselect'))
+              .width(32)
+              .height(32)
+            Text('窗帘')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+              .margin({ top: 4 })
+          }
+          .width('25%')
+          .height(60)
+          .justifyContent(FlexAlign.Center)
+          .onClick(() => {
+            router.pushUrl({ url: 'pages/CurtainControl' }).catch((err: Error) => {
+              console.error('Navigation failed:', err.message);
+            });
+          })
+
+          // 服务
+          Column() {
+            Image($r('app.media.tabs_icon_service_select'))
+              .width(32)
+              .height(32)
+            Text('服务')
+              .fontSize(12)
+              .fontColor('#FFFFFF')
+              .margin({ top: 4 })
+          }
+          .width('25%')
+          .height(60)
+          .justifyContent(FlexAlign.Center)
+        }
+        .width('100%')
+        .height(80)
+        .backgroundImage($r('app.media.tabs_bg'))
+        .backgroundImageSize(ImageSize.Cover)
+        .justifyContent(FlexAlign.SpaceAround)
       }
       .width('100%')
       .height('100%')
-      .alignItems(HorizontalAlign.Center)
     }
     .width('100%')
     .height('100%')
-    .linearGradient({
-      direction: GradientDirection.Bottom,
-      colors: [
-        [0x000000, 0.9],
-        [0x000000, 0.0]
-      ]
-    })
   }
 }
