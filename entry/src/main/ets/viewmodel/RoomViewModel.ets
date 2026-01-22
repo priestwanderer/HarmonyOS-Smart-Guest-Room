@@ -170,6 +170,18 @@ export class RoomViewModel {
     }
   }
 
+  setScreenOpen(openPercentage: number): void {
+    this.roomModel.curtain.screenOpen = Math.max(0, Math.min(100, openPercentage));
+  }
+
+  openScreen(): void {
+    this.setScreenOpen(100);
+  }
+
+  closeScreen(): void {
+    this.setScreenOpen(0);
+  }
+
   reset(): void {
     this.roomModel.airConditioner.isRunning = false;
     this.roomModel.airConditioner.targetTemperature = 26;

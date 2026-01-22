@@ -95,7 +95,7 @@ struct CurtainControl {
         .backgroundColor('rgba(0,0,0,0)')
         .margin({ bottom: 40 })
 
-        // 控制按钮
+        // 窗帘控制按钮
         Row() {
           Column() {
             Image($r('app.media.curtain_icon_open'))
@@ -106,7 +106,7 @@ struct CurtainControl {
                 this.viewModel.openCurtain();
               })
 
-            Text('打开')
+            Text('打开窗帘')
               .fontSize(14)
               .fontColor('#FFFFFF')
           }
@@ -159,7 +159,7 @@ struct CurtainControl {
                 this.viewModel.closeCurtain();
               })
 
-            Text('关闭')
+            Text('关闭窗帘')
               .fontSize(14)
               .fontColor('#FFFFFF')
           }
@@ -175,6 +175,67 @@ struct CurtainControl {
             ]
           })
           .borderRadius(12)
+        }
+        .margin({ bottom: 20 })
+
+        // 纱窗控制按钮
+        Row() {
+          Column() {
+            Image($r('app.media.curtain_icon_window_screening_left_part_closed'))
+              .width(48)
+              .height(48)
+              .margin({ bottom: 8 })
+              .onClick(() => {
+                this.viewModel.openScreen();
+              })
+
+            Text('打开纱窗')
+              .fontSize(14)
+              .fontColor('#FFFFFF')
+          }
+          .width(100)
+          .height(100)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+          .borderRadius(12)
+          .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
+          .linearGradient({
+            direction: GradientDirection.Bottom,
+            colors: [
+              [0x000000, 0.0],
+              [0x000000, 1.0]
+            ]
+          })
+          .borderRadius(12)
+
+          Column() {
+            Image($r('app.media.curtain_icon_window_screening_right_part_closed'))
+              .width(48)
+              .height(48)
+              .margin({ bottom: 8 })
+              .onClick(() => {
+                this.viewModel.closeScreen();
+              })
+
+            Text('关闭纱窗')
+              .fontSize(14)
+              .fontColor('#FFFFFF')
+          }
+          .width(100)
+          .height(100)
+          .justifyContent(FlexAlign.Center)
+          .alignItems(HorizontalAlign.Center)
+          .borderRadius(12)
+          .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
+          .linearGradient({
+            direction: GradientDirection.Bottom,
+            colors: [
+              [0x000000, 0.6],
+              [0x000000, 0.3]
+            ]
+          })
+          .borderRadius(12)
+          .margin({ left: 30, right: 30 })
         }
         .width('100%')
         .justifyContent(FlexAlign.Center)
@@ -232,10 +293,36 @@ struct CurtainControl {
   }
 
   /**
+   * 获取纱窗宽度
+   */
+  private getScreenWidth(isLeft: boolean): string {
+    const openPercentage = this.viewModel.roomModel.curtain.screenOpen;
+    const baseWidth = 45; // 基础宽度百分比
+    const actualWidth = isLeft
+      ? baseWidth - (openPercentage / 2)
+      : baseWidth - (openPercentage / 2);
+    return `${actualWidth}%`;
+  }
+
+  /**
    * 获取中间空隙宽度
    */
   private getGapWidth(): string {
     const openPercentage = this.viewModel.roomModel.curtain.curtainOpen;
     return `${openPercentage}%`;
+  }
+
+  /**
+   * 打开纱窗
+   */
+  private openScreen(): void {
+    this.viewModel.setScreenOpen(100);
+  }
+
+  /**
+   * 关闭纱窗
+   */
+  private closeScreen(): void {
+    this.viewModel.setScreenOpen(0);
   }
 }
