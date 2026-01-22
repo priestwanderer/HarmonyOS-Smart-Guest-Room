@@ -38,7 +38,7 @@ struct Index {
           .fontColor('#FFFFFF')
           .margin({ bottom: 60 })
 
-        // ????
+        // 客房号输入
         Column() {
           Row() {
             Image($r('app.media.icon_input_room'))
@@ -46,7 +46,7 @@ struct Index {
               .height(24)
               .margin({ right: 12 })
 
-            TextInput({ placeholder: '?????' })
+            TextInput({ placeholder: '请输入客房号' })
               .width(250)
               .height(48)
               .fontSize(16)
@@ -64,15 +64,15 @@ struct Index {
         }
         .margin({ bottom: 40 })
 
-        // User name input
+        // 用户名输入
         Column() {
           Row() {
-            Image($r('app.media.icon_input_room'))
+            Image($r('app.media.icon_input_user'))
               .width(24)
               .height(24)
               .margin({ right: 12 })
 
-            TextInput({ placeholder: '\u8bf7\u8f93\u5165\u59d3\u540d' })
+            TextInput({ placeholder: '请输入姓名' })
               .width(250)
               .height(48)
               .fontSize(16)
@@ -149,6 +149,8 @@ struct Index {
                 params: {
                   roomNumber: this.roomNumber.trim()
                 }
+              }).catch((err: Error) => {
+                console.error('Navigation failed:', err.message);
               });
             }
           })
