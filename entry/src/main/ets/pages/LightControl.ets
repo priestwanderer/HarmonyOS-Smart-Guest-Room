@@ -50,7 +50,7 @@ struct LightControl {
 
         // 主开关
         Column() {
-          Text('???')
+          Text('主开关')
             .fontSize(18)
             .fontWeight(FontWeight.Bold)
             .fontColor('#FFFFFF')
@@ -67,6 +67,67 @@ struct LightControl {
         .justifyContent(FlexAlign.Center)
         .margin({ bottom: 40 })
 
+        // 空调控制
+        Column() {
+          Text('空调控制')
+            .fontSize(18)
+            .fontWeight(FontWeight.Bold)
+            .fontColor('#FFFFFF')
+            .margin({ bottom: 16 })
+
+          Row() {
+            // 空调开关
+            DeviceSwitch({
+              isOpened: this.viewModel.roomModel.airConditioner.isRunning,
+              onChange: (value: boolean) => {
+                this.viewModel.toggleAirConditioner();
+              }
+            })
+            .margin({ right: 20 })
+
+            // 温度显示和调节
+            Column() {
+              Text(`${this.viewModel.roomModel.airConditioner.targetTemperature}°C`)
+                .fontSize(32)
+                .fontWeight(FontWeight.Bold)
+                .fontColor('#FFFFFF')
+
+              Row() {
+                // 减温按钮
+                Column()
+                  .width(40)
+                  .height(40)
+                  .justifyContent(FlexAlign.Center)
+                  .alignItems(HorizontalAlign.Center)
+                  .onClick(() => {
+                    this.viewModel.updateTemperature(-1);
+                  }) {
+                  Image($r('app.media.home_btn_sub'))
+                    .width(24)
+                    .height(24)
+                }
+
+                // 加温按钮
+                Column()
+                  .width(40)
+                  .height(40)
+                  .justifyContent(FlexAlign.Center)
+                  .alignItems(HorizontalAlign.Center)
+                  .onClick(() => {
+                    this.viewModel.updateTemperature(1);
+                  }) {
+                  Image($r('app.media.home_btn_add'))
+                    .width(24)
+                    .height(24)
+                }
+              }
+            }
+          }
+        }
+        .width('100%')
+        .justifyContent(FlexAlign.Center)
+        .margin({ bottom: 40 })
+
         // 场景模式选择
         Column() {
           Text('场景模式')
@@ -76,45 +137,39 @@ struct LightControl {
             .margin({ bottom: 16 })
 
           Row() {
-            Grid() {
-              ForEach(['bright', 'soft', 'read', 'warm', 'sleep'], (mode: string) => {
-                GridItem() {
-                  Column() {
-                    Image(this.getSceneIcon(mode))
-                      .width(32)
-                      .height(32)
-                      .margin({ bottom: 8 })
+            ForEach(['bright', 'soft', 'read', 'warm', 'sleep'], (mode: string) => {
+              Column() {
+                Image(this.getSceneIcon(mode))
+                  .width(40)
+                  .height(40)
+                  .margin({ bottom: 8 })
 
-                    Text(this.getSceneName(mode))
-                      .fontSize(14)
-                      .fontColor('#FFFFFF')
-                  }
-                  .width('100%')
-                  .height(80)
-                  .borderRadius(12)
-                  .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
-                  .linearGradient({
-                    direction: GradientDirection.Bottom,
-                    colors: [
-                      [0x000000, 0.6],
-                      [0x000000, 0.3]
-                    ]
-                  })
-                  .border({ width: 1, color: this.viewModel.roomModel.sceneMode === mode ? '#FFD700' : 'rgba(0,0,0,0)' })
-                  .onClick(() => {
-                    this.viewModel.switchScene(mode);
-                  })
-                }
+                Text(this.getSceneName(mode))
+                  .fontSize(14)
+                  .fontColor('#FFFFFF')
+              }
+              .width('18%')
+              .height(80)
+              .justifyContent(FlexAlign.Center)
+              .alignItems(HorizontalAlign.Center)
+              .borderRadius(12)
+              .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
+              .linearGradient({
+                direction: GradientDirection.Bottom,
+                colors: [
+                  [0x000000, 0.6],
+                  [0x000000, 0.3]
+                ]
               })
-            }
-            .columnsTemplate('1fr 1fr 1fr 1fr 1fr')
-            .rowsTemplate('1fr')
-            .width('100%')
-            .height(100)
-            .borderRadius(16)
+              .border({ width: 1, color: this.viewModel.roomModel.sceneMode === mode ? '#FFD700' : 'rgba(0,0,0,0)' })
+              .onClick(() => {
+                this.viewModel.switchScene(mode);
+              })
+            })
           }
           .width('100%')
-          .justifyContent(FlexAlign.Center)
+          .justifyContent(FlexAlign.SpaceBetween)
+          .padding({ left: '1%', right: '1%' })
         }
         .margin({ bottom: 40 })
 
@@ -132,8 +187,8 @@ struct LightControl {
                 Column() {
                   // 图标
                   Image(this.getLightIcon(light.name))
-                    .width(32)
-                    .height(32)
+                    .width(40)
+                    .height(40)
                     .margin({ bottom: 8 })
 
                   // 名称
@@ -150,7 +205,9 @@ struct LightControl {
                   })
                 }
                 .width('100%')
-                .height(100)
+                .height(120)
+                .justifyContent(FlexAlign.Center)
+                .alignItems(HorizontalAlign.Center)
                 .borderRadius(12)
                 .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
                 .linearGradient({
@@ -165,9 +222,10 @@ struct LightControl {
           }
           .columnsTemplate('1fr 1fr')
           .rowsTemplate('1fr 1fr 1fr')
-          .width('100%')
-          .height(300)
+          .width('95%')
+          .height(320)
           .borderRadius(16)
+          .margin({ left: '2.5%', right: '2.5%' })
         }
       }
       .width('100%')
