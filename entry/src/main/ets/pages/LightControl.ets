@@ -8,6 +8,9 @@ struct LightControl {
   @Local viewModel: RoomViewModel = new RoomViewModel();
   @Param roomNumber: string = '';
 
+  // 总开关状态
+  @Local isMainSwitchOn: boolean = false;
+
   // 静态灯光列表 - 使用@Local使其响应式
   @Local lights: LightState[] = [
     this.createLight('1', '洗漱间', false),
@@ -27,6 +30,26 @@ struct LightControl {
     light.name = name;
     light.isOpened = isOpened;
     return light;
+  }
+
+  // 切换总开关
+  toggleMainSwitch(): void {
+    this.isMainSwitchOn = !this.isMainSwitchOn;
+    // 总开关关闭时，所有灯关闭
+    if (!this.isMainSwitchOn) {
+      this.lights.forEach(light => {
+        light.isOpened = false;
+      });
+    }
+  }
+
+  // 切换单个灯
+  toggleLight(light: LightState): void {
+    // 总开关为关时，不能开启单个灯
+    if (!this.isMainSwitchOn && !light.isOpened) {
+      return;
+    }
+    light.isOpened = !light.isOpened;
   }
 
   async aboutToAppear() {
@@ -69,25 +92,41 @@ struct LightControl {
         }
         .width('90%')
         .justifyContent(FlexAlign.SpaceBetween)
-        .margin({ top: 40, bottom: 20 })
+        .margin({ top: 30, bottom: 15 })
 
         Scroll() {
           Column() {
             // 主开关区域
             Column() {
-              Image($r('app.media.light_btn_main_switch'))
-                .width(160)
-                .height(100)
-                .objectFit(ImageFit.Contain)
-                .onClick(() => {
-                  const anyOn = this.viewModel.roomModel.lights.some(light => light.isOpened);
-                  this.viewModel.toggleAllLights(!anyOn);
-                })
+              Stack({ alignContent: Alignment.Center }) {
+                // 发光背景
+                Column()
+                  .width(95)
+                  .height(95)
+                  .backgroundColor(this.isMainSwitchOn ? 'rgba(255, 215, 0, 0.1)' : 'transparent')
+                  .shadow({
+                    radius: this.isMainSwitchOn ? 70 : 0,
+                    color: this.isMainSwitchOn ? '#FFD700' : 'transparent'
+                  })
+
+                Image($r('app.media.light_btn_main_switch'))
+                  .width(160)
+                  .height(100)
+                  .objectFit(ImageFit.Contain)
+                  .onClick(() => {
+                    this.toggleMainSwitch();
+                  })
+              }
+              .width(150)
+              .height(150)
+              .onClick(() => {
+                this.toggleMainSwitch();
+              })
 
               Text('总开关')
                 .fontSize(16)
                 .fontWeight(FontWeight.Bold)
-                .fontColor('#FFFFFF')
+                .fontColor(this.isMainSwitchOn ? '#FFD700' : '#FFFFFF')
                 .margin({ top: 8 })
             }
             .width('90%')
@@ -198,8 +237,7 @@ struct LightControl {
                         .height(24)
                         .objectFit(ImageFit.Contain)
                         .onClick(() => {
-                          // 直接修改@ObservedV2对象的属性
-                          light.isOpened = !light.isOpened;
+                          this.toggleLight(light);
                         })
                     }
                     .width('100%')
