@@ -54,146 +54,152 @@ struct LightControl {
           Column() {
             // 主开关区域
             Column() {
-              // 主开关背景图
               Image($r('app.media.light_btn_main_switch'))
-                .width('100%')
-                .height(120)
-                .objectFit(ImageFit.Cover)
-                .borderRadius(16)
+                .width(160)
+                .height(100)
+                .objectFit(ImageFit.Contain)
+                .onClick(() => {
+                  const anyOn = this.viewModel.roomModel.lights.some(light => light.isOpened);
+                  this.viewModel.toggleAllLights(!anyOn);
+                })
 
-              // 主开关内容覆盖
-              Row() {
-                Column() {
-                  Text('主开关')
-                    .fontSize(18)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor('#FFFFFF')
-                    .margin({ bottom: 12 })
-
-                  // 主开关Toggle
-                  Toggle({ type: ToggleType.Switch, isOn: this.viewModel.roomModel.lights.some(light => light.isOpened) })
-                    .selectedColor('#FFD700')
-                    .width(60)
-                    .height(32)
-                    .onChange((value: boolean) => {
-                      this.viewModel.toggleAllLights(value);
-                    })
-                }
-              }
-              .width('100%')
-              .height('100%')
-              .justifyContent(FlexAlign.Center)
-              .alignItems(VerticalAlign.Center)
-              .position({ left: 0, top: 0 })
-            }
-            .width('90%')
-            .height(120)
-            .margin({ bottom: 30 })
-
-            // 场景模式区域
-            Column() {
-              Text('场景模式')
-                .fontSize(18)
+              Text('总开关')
+                .fontSize(16)
                 .fontWeight(FontWeight.Bold)
                 .fontColor('#FFFFFF')
-                .margin({ bottom: 16 })
+                .margin({ top: 8 })
+            }
+            .width('90%')
+            .margin({ bottom: 24 })
+
+            // 场景模式区域 - 毛玻璃背景
+            Column() {
+              Text('场景模式')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#FFFFFF')
+                .margin({ bottom: 12 })
                 .alignSelf(ItemAlign.Start)
 
-              // 场景模式网格
+              // 2x3 Grid布局 (5个模式)
               Grid() {
                 ForEach(['bright', 'soft', 'read', 'warm', 'sleep'], (mode: string) => {
                   GridItem() {
-                    Column() {
-                      Image(this.getSceneIcon(mode))
-                        .width(40)
-                        .height(40)
-                        .margin({ bottom: 8 })
+                    Stack() {
+                      // 模式背景图
+                      Image($r('app.media.light_btn_mode_bg'))
+                        .width('100%')
+                        .height('100%')
+                        .position({ left: 0, top: 0 })
+                        .objectFit(ImageFit.Cover)
+                        .borderRadius(12)
 
-                      Text(this.getSceneName(mode))
-                        .fontSize(14)
-                        .fontColor('#FFFFFF')
-
-                      // 选中状态指示点
+                      // 选中状态
                       if (this.viewModel.roomModel.sceneMode === mode) {
-                        Image($r('app.media.tabs_bg'))
-                          .width(40)
-                          .height(4)
-                          .margin({ top: 8 })
+                        Image($r('app.media.tabs_icon_bg_selected'))
+                          .width('100%')
+                          .height('100%')
+                          .position({ left: 0, top: 0 })
+                          .borderRadius(12)
                       }
+
+                      Row() {
+                        Image(this.getSceneIcon(mode))
+                          .width(24)
+                          .height(24)
+                          .margin({ right: 8 })
+
+                        Text(this.getSceneName(mode) + '模式')
+                          .fontSize(14)
+                          .fontColor('#FFFFFF')
+                      }
+                      .width('100%')
+                      .height('100%')
+                      .justifyContent(FlexAlign.Center)
+                      .alignItems(VerticalAlign.Center)
+                      .padding({ left: 16, right: 16 })
                     }
                     .width('100%')
-                    .height(80)
-                    .justifyContent(FlexAlign.Center)
-                    .align(Alignment.Center)
+                    .height(56)
                     .onClick(() => {
                       this.viewModel.switchScene(mode);
                     })
                   }
                 })
               }
-              .columnsTemplate('1fr 1fr 1fr 1fr 1fr')
-              .rowsTemplate('1fr')
+              .columnsTemplate('1fr 1fr')
+              .rowsTemplate('1fr 1fr 1fr')
+              .columnsGap(12)
+              .rowsGap(12)
               .width('100%')
-              .height(100)
+              .height(180)
             }
             .width('90%')
-            .margin({ bottom: 30 })
+            .padding(16)
+            .backgroundColor('rgba(255, 255, 255, 0.1)')
+            .backdropBlur(25)
+            .borderRadius(16)
+            .margin({ bottom: 24 })
 
-            // 独立控制区域
+            // 独立控制区域 - 毛玻璃背景
             Column() {
               Text('独立控制')
-                .fontSize(18)
-                .fontWeight(FontWeight.Bold)
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
                 .fontColor('#FFFFFF')
-                .margin({ bottom: 16 })
+                .margin({ bottom: 12 })
                 .alignSelf(ItemAlign.Start)
 
-              // 独立控制网格背景
-              Image($r('app.media.light_Independent_control_bg'))
-                .width('100%')
-                .height(320)
-                .objectFit(ImageFit.Cover)
-                .borderRadius(16)
-
-              // 网格内容
+              // 2列Grid布局
               Grid() {
                 ForEach(this.viewModel.roomModel.lights, (light: LightState) => {
                   GridItem() {
-                    Column() {
+                    Row() {
                       // 图标
                       Image(this.getLightIcon(light.name))
-                        .width(40)
-                        .height(40)
-                        .margin({ bottom: 8 })
+                        .width(28)
+                        .height(28)
+                        .objectFit(ImageFit.Contain)
 
                       // 名称
                       Text(light.name)
                         .fontSize(14)
                         .fontColor('#FFFFFF')
+                        .margin({ left: 8 })
 
-                      // 开关
-                      Toggle({ type: ToggleType.Switch, isOn: light.isOpened })
-                        .selectedColor('#FFD700')
+                      Blank()
+
+                      // 开关图片
+                      Image(light.isOpened
+                        ? $r('app.media.light_toggle_on')
+                        : $r('app.media.light_toggle_off'))
                         .width(44)
                         .height(24)
-                        .onChange((value: boolean) => {
-                          this.viewModel.setLightState(light.id, value);
+                        .objectFit(ImageFit.Contain)
+                        .onClick(() => {
+                          this.viewModel.setLightState(light.id, !light.isOpened);
                         })
                     }
                     .width('100%')
-                    .height(100)
-                    .justifyContent(FlexAlign.Center)
-                    .align(Alignment.Center)
+                    .height(48)
+                    .padding({ left: 12, right: 12 })
+                    .backgroundColor('rgba(255, 255, 255, 0.2)')
+                    .borderRadius(12)
                   }
                 })
               }
               .columnsTemplate('1fr 1fr')
-              .rowsTemplate('1fr 1fr 1fr')
-              .width('90%')
-              .height(300)
-              .position({ left: '5%', top: 10 })
+              .rowsTemplate('1fr')
+              .columnsGap(12)
+              .rowsGap(12)
+              .width('100%')
+              .height(180)
             }
             .width('90%')
+            .padding(16)
+            .backgroundColor('rgba(255, 255, 255, 0.1)')
+            .backdropBlur(25)
+            .borderRadius(16)
             .margin({ bottom: 40 })
           }
         }
