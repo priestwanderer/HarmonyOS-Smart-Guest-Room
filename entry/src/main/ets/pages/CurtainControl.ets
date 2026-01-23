@@ -7,12 +7,32 @@ struct CurtainControl {
   @Local viewModel: RoomViewModel = new RoomViewModel();
   @Param roomNumber: string = '';
 
+  // 窗帘状态（0-100）
+  @Local curtainOpen: number = 0;
+  // 窗纱状态（0-100）
+  @Local screenOpen: number = 0;
+
   async aboutToAppear() {
     await this.viewModel.init(getContext());
     if (this.roomNumber) {
       this.viewModel.setRoomNumber(this.roomNumber);
     }
     await this.viewModel.loadRoomState();
+    // 初始化状态
+    this.curtainOpen = this.viewModel.roomModel.curtain.curtainOpen;
+    this.screenOpen = this.viewModel.roomModel.curtain.screenOpen;
+  }
+
+  // 设置窗帘状态
+  setCurtainState(value: number): void {
+    this.curtainOpen = value;
+    this.viewModel.setCurtainState(value);
+  }
+
+  // 设置窗纱状态
+  setScreenState(value: number): void {
+    this.screenOpen = value;
+    this.viewModel.setScreenState(value);
   }
 
   build() {
@@ -51,239 +71,335 @@ struct CurtainControl {
 
         Scroll() {
           Column() {
-            // 窗帘视觉展示区域
-            Column() {
-              // 顶部横杆
-              Image($r('app.media.curtain_icon_top_bar'))
-                .width('80%')
-                .height(20)
-                .margin({ bottom: 10 })
-
-              // 窗帘主体
-              Stack() {
-                // 窗纱背景（关闭状态）
-                if (this.viewModel.roomModel.curtain.screenOpen < 50) {
-                  Row() {
-                    Image($r('app.media.curtain_icon_window_screening_left_part_closed'))
-                      .width('45%')
-                      .height('100%')
-                      .objectFit(ImageFit.Cover)
-
-                    Image($r('app.media.curtain_icon_window_screening_right_part_closed'))
-                      .width('45%')
-                      .height('100%')
-                      .objectFit(ImageFit.Cover)
-                  }
-                  .width('100%')
-                  .height('100%')
-                }
-
-                // 窗帘状态展示
+            // 模块一：全部打开/关闭按钮
+            Row() {
+              // 全部打开按钮
+              Column() {
                 Row() {
-                  // 左侧窗帘
-                  Image(this.viewModel.roomModel.curtain.curtainOpen > 50
-                    ? $r('app.media.curtain_icon_left_part')
-                    : $r('app.media.curtain_icon_left_closed'))
-                    .width(this.getCurtainWidth(true))
-                    .height('100%')
-                    .objectFit(ImageFit.Cover)
-                    .transition(TransitionEffect.OPACITY)
+                  Image($r('app.media.curtain_icon_open_all'))
+                    .width(24)
+                    .height(24)
+                    .objectFit(ImageFit.Contain)
+                    .margin({ right: 8 })
 
-                  // 中间空隙
-                  Column()
-                    .width(this.getGapWidth())
-                    .height('100%')
-
-                  // 右侧窗帘
-                  Image(this.viewModel.roomModel.curtain.curtainOpen > 50
-                    ? $r('app.media.curtain_icon_right_part')
-                    : $r('app.media.curtain_icon_right_closed'))
-                    .width(this.getCurtainWidth(false))
-                    .height('100%')
-                    .objectFit(ImageFit.Cover)
-                    .transition(TransitionEffect.OPACITY)
+                  Text('全部打开')
+                    .fontSize(14)
+                    .fontColor('#FFFFFF')
                 }
-                .width('100%')
-                .height(250)
-                .justifyContent(FlexAlign.SpaceBetween)
               }
-              .width('100%')
-              .height(250)
-              .backgroundColor('rgba(0,0,0,0)')
+              .width('48%')
+              .height(56)
+              .justifyContent(FlexAlign.Center)
+              .alignItems(HorizontalAlign.Center)
+              .backgroundImage($r('app.media.curtain_btn_all_open_or_close_selected_bg'))
+              .backgroundImageSize(ImageSize.Contain)
+              .backgroundImagePosition(Alignment.Center)
+              .borderRadius(12)
+              .onClick(() => {
+                this.curtainOpen = 100;
+                this.screenOpen = 100;
+                this.viewModel.openCurtain();
+                this.viewModel.openScreen();
+              })
+
+              // 全部关闭按钮
+              Column() {
+                Row() {
+                  Image($r('app.media.curtain_icon_close_all'))
+                    .width(24)
+                    .height(24)
+                    .objectFit(ImageFit.Contain)
+                    .margin({ right: 8 })
+
+                  Text('全部关闭')
+                    .fontSize(14)
+                    .fontColor('#FFFFFF')
+                }
+              }
+              .width('48%')
+              .height(56)
+              .justifyContent(FlexAlign.Center)
+              .alignItems(HorizontalAlign.Center)
+              .backgroundImage($r('app.media.curtain_btn_all_open_or_close_selected_bg'))
+              .backgroundImageSize(ImageSize.Contain)
+              .backgroundImagePosition(Alignment.Center)
+              .borderRadius(12)
+              .onClick(() => {
+                this.curtainOpen = 0;
+                this.screenOpen = 0;
+                this.viewModel.closeCurtain();
+                this.viewModel.closeScreen();
+              })
             }
             .width('90%')
-            .height(280)
-            .margin({ bottom: 30 })
+            .justifyContent(FlexAlign.SpaceBetween)
+            .padding(16)
+            .backgroundColor('rgba(255, 255, 255, 0.1)')
+            .backdropBlur(25)
+            .borderRadius(16)
+            .margin({ bottom: 24 })
 
-            // 窗帘控制区域
+            // 模块二：布帘部分
             Column() {
-              // 窗帘控制按钮
+              // 布帘标签
+              Text('布帘')
+                .fontSize(16)
+                .fontWeight(FontWeight.Bold)
+                .fontColor('#FFFFFF')
+                .alignSelf(ItemAlign.Start)
+                .margin({ bottom: 8 })
+
+              // 顶部横杆
+              Image($r('app.media.curtain_icon_top_bar'))
+                .width('100%')
+                .height(20)
+                .objectFit(ImageFit.Contain)
+                .margin({ bottom: 0 })
+
+              // 窗帘状态展示
               Row() {
-                // 全部打开
+                // 左侧窗帘
+                Image(this.curtainOpen > 50
+                  ? $r('app.media.curtain_icon_left_part')
+                  : $r('app.media.curtain_icon_left_closed'))
+                  .width('45%')
+                  .height(180)
+                  .objectFit(ImageFit.Cover)
+
+                // 右侧窗帘
+                Image(this.curtainOpen > 50
+                  ? $r('app.media.curtain_icon_right_part')
+                  : $r('app.media.curtain_icon_right_closed'))
+                  .width('45%')
+                  .height(180)
+                  .objectFit(ImageFit.Cover)
+              }
+              .width('100%')
+              .height(180)
+              .justifyContent(FlexAlign.SpaceBetween)
+              .margin({ left: 4, right: 4 })
+
+              // 布帘控制按钮
+              Row() {
+                // 打开按钮
                 Column() {
-                  Image($r('app.media.curtain_icon_open_all'))
-                    .width(48)
-                    .height(48)
-                    .margin({ bottom: 8 })
+                  Column() {
+                    Image($r('app.media.curtain_icon_open'))
+                      .width(24)
+                      .height(24)
+                      .objectFit(ImageFit.Contain)
+                  }
+                  .width(44)
+                  .height(44)
+                  .justifyContent(FlexAlign.Center)
+                  .alignItems(HorizontalAlign.Center)
+                  .backgroundImage($r('app.media.curtain_btn_selected_bg'))
+                  .backgroundImageSize(ImageSize.Cover)
+                  .borderRadius(10)
+                  .onClick(() => {
+                    this.curtainOpen = 100;
+                    this.viewModel.openCurtain();
+                  })
 
                   Text('打开')
-                    .fontSize(14)
+                    .fontSize(12)
                     .fontColor('#FFFFFF')
+                    .margin({ top: 6 })
                 }
-                .width(90)
-                .height(100)
-                .borderRadius(16)
-                .justifyContent(FlexAlign.Center)
-                .align(Alignment.Center)
-                .backgroundImage($r('app.media.curtain_btn_all_open_or_close_selected_bg'))
-                .backgroundImageSize(ImageSize.Cover)
-                .onClick(() => {
-                  this.viewModel.openCurtain();
-                })
 
-                // 暂停
+                // 暂停按钮
                 Column() {
-                  Image($r('app.media.curtain_icon_open'))
-                    .width(48)
-                    .height(48)
-                    .margin({ bottom: 8 })
+                  Column() {
+                    Image($r('app.media.curtain_icon_pause'))
+                      .width(24)
+                      .height(24)
+                      .objectFit(ImageFit.Contain)
+                  }
+                  .width(44)
+                  .height(44)
+                  .justifyContent(FlexAlign.Center)
+                  .alignItems(HorizontalAlign.Center)
+                  .backgroundImage($r('app.media.curtain_btn_unselected_bg'))
+                  .backgroundImageSize(ImageSize.Cover)
+                  .borderRadius(10)
+                  .onClick(() => {
+                    // 暂停窗帘运动（暂无实现）
+                  })
 
                   Text('暂停')
-                    .fontSize(14)
+                    .fontSize(12)
                     .fontColor('#FFFFFF')
+                    .margin({ top: 6 })
                 }
-                .width(90)
-                .height(100)
-                .borderRadius(16)
-                .justifyContent(FlexAlign.Center)
-                .align(Alignment.Center)
-                .backgroundImage($r('app.media.curtain_btn_unselected_bg'))
-                .backgroundImageSize(ImageSize.Cover)
-                .margin({ left: 20, right: 20 })
-                .onClick(() => {
-                  // 暂停当前窗帘运动
-                })
+                .margin({ left: 24, right: 24 })
 
-                // 全部关闭
+                // 关闭按钮
                 Column() {
-                  Image($r('app.media.curtain_icon_close_all'))
-                    .width(48)
-                    .height(48)
-                    .margin({ bottom: 8 })
+                  Column() {
+                    Image($r('app.media.curtain_icon_close'))
+                      .width(24)
+                      .height(24)
+                      .objectFit(ImageFit.Contain)
+                  }
+                  .width(44)
+                  .height(44)
+                  .justifyContent(FlexAlign.Center)
+                  .alignItems(HorizontalAlign.Center)
+                  .backgroundImage($r('app.media.curtain_btn_unselected_bg'))
+                  .backgroundImageSize(ImageSize.Cover)
+                  .borderRadius(10)
+                  .onClick(() => {
+                    this.curtainOpen = 0;
+                    this.viewModel.closeCurtain();
+                  })
 
                   Text('关闭')
-                    .fontSize(14)
+                    .fontSize(12)
                     .fontColor('#FFFFFF')
+                    .margin({ top: 6 })
                 }
-                .width(90)
-                .height(100)
-                .borderRadius(16)
-                .justifyContent(FlexAlign.Center)
-                .align(Alignment.Center)
-                .backgroundImage($r('app.media.curtain_btn_selected_bg'))
-                .backgroundImageSize(ImageSize.Cover)
-                .onClick(() => {
-                  this.viewModel.closeCurtain();
-                })
               }
               .width('100%')
               .justifyContent(FlexAlign.Center)
-              .margin({ bottom: 30 })
+              .margin({ top: 12 })
+            }
+            .width('90%')
+            .padding(16)
+            .backgroundColor('rgba(255, 255, 255, 0.1)')
+            .backdropBlur(20)
+            .borderRadius(16)
+            .margin({ bottom: 24 })
 
-              // 纱窗控制区域
-              Column() {
-                Text('窗纱控制')
-                  .fontSize(16)
-                  .fontWeight(FontWeight.Bold)
-                  .fontColor('#FFFFFF')
-                  .margin({ bottom: 16 })
-                  .alignSelf(ItemAlign.Start)
+            // 模块三：窗纱部分
+            Column() {
+              // 窗纱标签
+              Text('窗纱')
+                .fontSize(16)
+                .fontWeight(FontWeight.Bold)
+                .fontColor('#FFFFFF')
+                .alignSelf(ItemAlign.Start)
+                .margin({ bottom: 8 })
 
-                Row() {
-                  // 纱窗打开
+              // 顶部横杆
+              Image($r('app.media.curtain_icon_top_bar'))
+                .width('100%')
+                .height(20)
+                .objectFit(ImageFit.Contain)
+                .margin({ bottom: 0 })
+
+              // 窗纱状态展示
+              Row() {
+                // 左侧窗纱
+                Image(this.screenOpen > 50
+                  ? $r('app.media.curtain_icon_window_screening_left_part')
+                  : $r('app.media.curtain_icon_window_screening_left_part_closed'))
+                  .width('45%')
+                  .height(180)
+                  .objectFit(ImageFit.Cover)
+
+                // 右侧窗纱
+                Image(this.screenOpen > 50
+                  ? $r('app.media.curtain_icon_window_screening_right_part')
+                  : $r('app.media.curtain_icon_window_screening_right_part_closed'))
+                  .width('45%')
+                  .height(180)
+                  .objectFit(ImageFit.Cover)
+              }
+              .width('100%')
+              .height(180)
+              .justifyContent(FlexAlign.SpaceBetween)
+              .margin({ left: 4, right: 4 })
+
+              // 窗纱控制按钮
+              Row() {
+                // 打开按钮
+                Column() {
                   Column() {
-                    Image($r('app.media.curtain_icon_window_screening_left_part'))
-                      .width(48)
-                      .height(48)
-                      .margin({ bottom: 8 })
-
-                    Text('打开')
-                      .fontSize(14)
-                      .fontColor('#FFFFFF')
+                    Image($r('app.media.curtain_icon_open'))
+                      .width(24)
+                      .height(24)
+                      .objectFit(ImageFit.Contain)
                   }
-                  .width(90)
-                  .height(100)
-                  .borderRadius(16)
+                  .width(44)
+                  .height(44)
                   .justifyContent(FlexAlign.Center)
-                  .align(Alignment.Center)
-                  .backgroundImage($r('app.media.curtain_window_screening_part_bg'))
+                  .alignItems(HorizontalAlign.Center)
+                  .backgroundImage($r('app.media.curtain_btn_selected_bg'))
                   .backgroundImageSize(ImageSize.Cover)
+                  .borderRadius(10)
                   .onClick(() => {
+                    this.screenOpen = 100;
                     this.viewModel.openScreen();
                   })
 
-                  // 纱窗关闭
-                  Column() {
-                    Image($r('app.media.curtain_icon_window_screening_right_part'))
-                      .width(48)
-                      .height(48)
-                      .margin({ bottom: 8 })
+                  Text('打开')
+                    .fontSize(12)
+                    .fontColor('#FFFFFF')
+                    .margin({ top: 6 })
+                }
 
-                    Text('关闭')
-                      .fontSize(14)
-                      .fontColor('#FFFFFF')
+                // 暂停按钮
+                Column() {
+                  Column() {
+                    Image($r('app.media.curtain_icon_pause'))
+                      .width(24)
+                      .height(24)
+                      .objectFit(ImageFit.Contain)
                   }
-                  .width(90)
-                  .height(100)
-                  .borderRadius(16)
+                  .width(44)
+                  .height(44)
                   .justifyContent(FlexAlign.Center)
-                  .align(Alignment.Center)
-                  .backgroundImage($r('app.media.curtain_window_screening_part_bg'))
+                  .alignItems(HorizontalAlign.Center)
+                  .backgroundImage($r('app.media.curtain_btn_unselected_bg'))
                   .backgroundImageSize(ImageSize.Cover)
-                  .margin({ left: 20, right: 20 })
+                  .borderRadius(10)
                   .onClick(() => {
+                    // 暂停窗纱运动（暂无实现）
+                  })
+
+                  Text('暂停')
+                    .fontSize(12)
+                    .fontColor('#FFFFFF')
+                    .margin({ top: 6 })
+                }
+                .margin({ left: 24, right: 24 })
+
+                // 关闭按钮
+                Column() {
+                  Column() {
+                    Image($r('app.media.curtain_icon_close'))
+                      .width(24)
+                      .height(24)
+                      .objectFit(ImageFit.Contain)
+                  }
+                  .width(44)
+                  .height(44)
+                  .justifyContent(FlexAlign.Center)
+                  .alignItems(HorizontalAlign.Center)
+                  .backgroundImage($r('app.media.curtain_btn_unselected_bg'))
+                  .backgroundImageSize(ImageSize.Cover)
+                  .borderRadius(10)
+                  .onClick(() => {
+                    this.screenOpen = 0;
                     this.viewModel.closeScreen();
                   })
-                }
-                .width('100%')
-                .justifyContent(FlexAlign.Center)
-              }
-              .width('90%')
-              .margin({ bottom: 30 })
 
-              // 窗帘开合程度滑块
-              Column() {
-                Row() {
-                  Text('窗帘开合程度:')
-                    .fontSize(16)
+                  Text('关闭')
+                    .fontSize(12)
                     .fontColor('#FFFFFF')
-                    .margin({ right: 8 })
-
-                  Text(`${this.viewModel.roomModel.curtain.curtainOpen}%`)
-                    .fontSize(16)
-                    .fontColor('#FFD700')
+                    .margin({ top: 6 })
                 }
-                .margin({ bottom: 12 })
-                .alignSelf(ItemAlign.Start)
-
-                Slider({
-                  value: this.viewModel.roomModel.curtain.curtainOpen,
-                  min: 0,
-                  max: 100,
-                  style: SliderStyle.OutSet
-                })
-                  .width('100%')
-                  .trackColor('rgba(255,255,255,0.3)')
-                  .selectedColor('#FFD700')
-                  .blockColor('#FFFFFF')
-                  .onChange((value: number) => {
-                    this.viewModel.setCurtainState(value);
-                  })
               }
-              .width('90%')
-              .margin({ bottom: 40 })
+              .width('100%')
+              .justifyContent(FlexAlign.Center)
+              .margin({ top: 12 })
             }
             .width('90%')
+            .padding(16)
+            .backgroundColor('rgba(255, 255, 255, 0.1)')
+            .backdropBlur(20)
+            .borderRadius(16)
+            .margin({ bottom: 40 })
           }
         }
         .width('100%')
@@ -374,25 +490,5 @@ struct CurtainControl {
     }
     .width('100%')
     .height('100%')
-  }
-
-  /**
-   * 获取窗帘宽度
-   */
-  private getCurtainWidth(isLeft: boolean): string {
-    const openPercentage = this.viewModel.roomModel.curtain.curtainOpen;
-    const baseWidth = 45;
-    const actualWidth = isLeft
-      ? baseWidth - (openPercentage / 2)
-      : baseWidth - (openPercentage / 2);
-    return `${Math.max(5, actualWidth)}%`;
-  }
-
-  /**
-   * 获取中间空隙宽度
-   */
-  private getGapWidth(): string {
-    const openPercentage = this.viewModel.roomModel.curtain.curtainOpen;
-    return `${openPercentage}%`;
   }
 }
