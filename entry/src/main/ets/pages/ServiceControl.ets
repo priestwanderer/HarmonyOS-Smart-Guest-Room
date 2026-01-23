@@ -75,31 +75,29 @@ struct ServiceControl {
 
         Scroll() {
           Column() {
-            // 请勿打扰卡片
-            Column() {
-              Row() {
+            // 服务卡片行
+            Row() {
+              // 请勿打扰卡片
+              Column() {
                 // 图标
                 Image($r('app.media.service_icon_do_not_disturb'))
                   .width(40)
                   .height(40)
+                  .margin({ bottom: 8 })
 
-                // 标题和状态
-                Column() {
-                  Text('请勿打扰')
-                    .fontSize(18)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor('#FFFFFF')
+                // 标题
+                Text('请勿打扰')
+                  .fontSize(16)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor('#FFFFFF')
+                  .margin({ bottom: 4 })
 
-                  Text(this.viewModel.roomModel.service.doNotDisturb ? '已开启' : '已关闭')
-                    .fontSize(14)
-                    .fontColor('#FFFFFF')
-                    .opacity(0.7)
-                    .margin({ top: 4 })
-                }
-                .alignItems(HorizontalAlign.Center)
-                .margin({ left: 16 })
-
-                Blank()
+                // 状态
+                Text(this.viewModel.roomModel.service.doNotDisturb ? '已开启' : '已关闭')
+                  .fontSize(14)
+                  .fontColor('#FFFFFF')
+                  .opacity(0.7)
+                  .margin({ bottom: 8 })
 
                 // 开关
                 Image(this.viewModel.roomModel.service.doNotDisturb
@@ -112,41 +110,38 @@ struct ServiceControl {
                     this.viewModel.toggleDoNotDisturb();
                   })
               }
-              .width('100%')
-              .padding(16)
-            }
-            .width('90%')
-            .height(80)
-            .backgroundImage($r('app.media.service_do_not_disturb_bg'))
-            .backgroundImageSize(ImageSize.Cover)
-            .borderRadius(16)
-            .margin({ bottom: 20 })
+              .width('48%')
+              .height(160)
+              .justifyContent(FlexAlign.Center)
+              .alignItems(HorizontalAlign.Center)
+              .backgroundImage($r('app.media.service_do_not_disturb_bg'))
+              .backgroundImageSize(ImageSize.Cover)
+              .borderRadius(16)
+              .onClick(() => {
+                this.viewModel.toggleDoNotDisturb();
+              })
 
-            // 清理房间卡片
-            Column() {
-              Row() {
+              // 清理房间卡片
+              Column() {
                 // 图标
                 Image($r('app.media.service_icon_clean_room'))
                   .width(40)
                   .height(40)
+                  .margin({ bottom: 8 })
 
-                // 标题和状态
-                Column() {
-                  Text('清理房间')
-                    .fontSize(18)
-                    .fontWeight(FontWeight.Bold)
-                    .fontColor('#FFFFFF')
+                // 标题
+                Text('清理房间')
+                  .fontSize(16)
+                  .fontWeight(FontWeight.Bold)
+                  .fontColor('#FFFFFF')
+                  .margin({ bottom: 4 })
 
-                  Text(this.viewModel.roomModel.service.cleanRoom ? '已请求' : '未请求')
-                    .fontSize(14)
-                    .fontColor('#FFFFFF')
-                    .opacity(0.7)
-                    .margin({ top: 4 })
-                }
-                .alignItems(HorizontalAlign.Center)
-                .margin({ left: 16 })
-
-                Blank()
+                // 状态
+                Text(this.viewModel.roomModel.service.cleanRoom ? '已请求' : '未请求')
+                  .fontSize(14)
+                  .fontColor('#FFFFFF')
+                  .opacity(0.7)
+                  .margin({ bottom: 8 })
 
                 // 开关
                 Image(this.viewModel.roomModel.service.cleanRoom
@@ -159,15 +154,20 @@ struct ServiceControl {
                     this.viewModel.toggleCleanRoom();
                   })
               }
-              .width('100%')
-              .padding(16)
+              .width('48%')
+              .height(160)
+              .justifyContent(FlexAlign.Center)
+              .alignItems(HorizontalAlign.Center)
+              .backgroundImage($r('app.media.service_clean_room_bg'))
+              .backgroundImageSize(ImageSize.Cover)
+              .borderRadius(16)
+              .onClick(() => {
+                this.viewModel.toggleCleanRoom();
+              })
             }
             .width('90%')
-            .height(80)
-            .backgroundImage($r('app.media.service_clean_room_bg'))
-            .backgroundImageSize(ImageSize.Cover)
-            .borderRadius(16)
-            .margin({ bottom: 40 })
+            .justifyContent(FlexAlign.SpaceBetween)
+            .margin({ bottom: 20 })
 
             // SOS 紧急呼叫按钮
             Column() {
