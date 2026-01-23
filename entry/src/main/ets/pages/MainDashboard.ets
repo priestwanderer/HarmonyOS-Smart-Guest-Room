@@ -35,41 +35,22 @@ struct MainDashboard {
         // 顶部欢迎区域
         Row() {
           Column() {
-            Text('智慧客房')
-              .fontSize(24)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#FFFFFF')
+            Image($r('app.media.home_text_smart_guest_room'))
+              .width(120)
+              .height(24)
+              .objectFit(ImageFit.Contain)
 
-            Text(`房号: ${this.viewModel.roomModel.roomNumber}`)
+            Text(`欢迎回家，房号: ${this.viewModel.roomModel.roomNumber}`)
               .fontSize(14)
               .fontColor('#FFFFFF')
               .opacity(0.8)
-              .margin({ top: 4 })
+              .margin({ top: 8 })
           }
           .alignItems(HorizontalAlign.Center)
-
-          // SOS按钮
-          Column() {
-            Text('SOS')
-              .fontSize(16)
-              .fontWeight(FontWeight.Bold)
-              .fontColor('#FFFFFF')
-          }
-          .width(60)
-          .height(60)
-          .borderRadius(30)
-          .backgroundColor('#FF3333')
-          .justifyContent(FlexAlign.Center)
-          .onClick(() => {
-            router.pushUrl({ url: 'pages/ServiceControl' }).catch((err: Error) => {
-              console.error('Navigation failed:', err.message);
-            });
-          })
         }
         .width('90%')
-        .justifyContent(FlexAlign.SpaceBetween)
-        .alignItems(VerticalAlign.Center)
-        .margin({ top: 40, bottom: 20 })
+        .justifyContent(FlexAlign.Center)
+        .margin({ top: 50, bottom: 24 })
 
         // 主内容区域
         Scroll() {
@@ -82,6 +63,7 @@ struct MainDashboard {
                 .height('100%')
                 .position({ left: 0, top: 0 })
                 .objectFit(ImageFit.Cover)
+                .borderRadius(12)
 
               // 空调内容
               Column() {
@@ -99,16 +81,17 @@ struct MainDashboard {
 
                     // 空调开关
                     Row() {
-                      Text(this.viewModel.roomModel.airConditioner.isRunning ? '开' : '关')
-                        .fontSize(14)
-                        .fontColor('#FFFFFF')
-                        .margin({ right: 8 })
-
-                      Toggle({ type: ToggleType.Switch, isOn: this.viewModel.roomModel.airConditioner.isRunning })
-                        .selectedColor('#FFD700')
-                        .width(44)
-                        .height(24)
-                        .onChange((value: boolean) => {
+                      Image(this.viewModel.roomModel.airConditioner.isRunning
+                        ? $r('app.media.service_toggle_dots_bg')
+                        : $r('app.media.home_icon_close'))
+                        .width(52)
+                        .height(28)
+                        .objectFit(ImageFit.Contain)
+                        .shadow({
+                          radius: this.viewModel.roomModel.airConditioner.isRunning ? 4 : 0,
+                          color: this.viewModel.roomModel.airConditioner.isRunning ? '#88FFD700' : '#00000000'
+                        })
+                        .onClick(() => {
                           this.viewModel.toggleAirConditioner();
                         })
                     }
@@ -163,121 +146,167 @@ struct MainDashboard {
 
             // 场景模式区域
             Column() {
+              // 标题
               Text('场景模式')
-                .fontSize(18)
-                .fontWeight(FontWeight.Bold)
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
                 .fontColor('#FFFFFF')
-                .margin({ bottom: 16 })
+                .width('90%')
+                .margin({ bottom: 12 })
 
-              // 场景模式网格
+              // 2x2 场景模式网格
               Grid() {
-                ForEach(['bright', 'soft', 'read', 'warm', 'sleep'], (mode: string, index: number) => {
+                ForEach(['bright', 'soft', 'read', 'warm'], (mode: string, index: number) => {
                   GridItem() {
-                    Column() {
-                      // 背景选中状态
+                    Stack() {
+                      // 背景图片
+                      Image($r('app.media.home_layer_scenemode'))
+                        .width('100%')
+                        .height('100%')
+                        .borderRadius(12)
+
+                      // 选中状态
                       if (this.viewModel.roomModel.sceneMode === mode) {
-                        Image($r('app.media.tabs_bg'))
+                        Image($r('app.media.tabs_icon_bg_selected'))
                           .width('100%')
                           .height('100%')
-                          .position({ left: 0, top: 0 })
-                          .objectFit(ImageFit.Cover)
+                          .borderRadius(12)
                       }
 
-                      Image(this.getSceneIcon(mode))
-                        .width(32)
-                        .height(32)
-                        .margin({ bottom: 8 })
+                      Row() {
+                        Image(this.getSceneIcon(mode))
+                          .width(28)
+                          .height(28)
+                          .margin({ right: 8 })
 
-                      Text(this.getSceneName(mode))
-                        .fontSize(14)
-                        .fontColor('#FFFFFF')
+                        Text(this.getSceneName(mode))
+                          .fontSize(14)
+                          .fontColor('rgb(88, 53, 23)')
+                      }
+                      .justifyContent(FlexAlign.Center)
+                      .alignItems(VerticalAlign.Center)
                     }
                     .width('100%')
-                    .height(80)
-                    .justifyContent(FlexAlign.Center)
-                    .align(Alignment.Center)
+                    .height(64)
                     .onClick(() => {
                       this.viewModel.switchScene(mode);
                     })
                   }
                 })
               }
-              .columnsTemplate('1fr 1fr 1fr 1fr 1fr')
-              .rowsTemplate('1fr')
+              .columnsTemplate('1fr 1fr')
+              .rowsTemplate('1fr 1fr')
+              .columnsGap(12)
+              .rowsGap(12)
               .width('100%')
-              .height(90)
+              .height(140)
             }
             .width('90%')
-            .margin({ bottom: 30 })
+            .margin({ bottom: 24 })
 
-            // 快捷功能按钮
-            Row() {
-              // 灯光按钮
-              Column() {
-                Image($r('app.media.tabs_icon_light_select'))
-                  .width(40)
-                  .height(40)
-                Text('灯光控制')
-                  .fontSize(14)
-                  .fontColor('#FFFFFF')
-                  .margin({ top: 8 })
-              }
-              .width(90)
-              .height(100)
-              .borderRadius(16)
-              .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
-              .justifyContent(FlexAlign.Center)
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/LightControl' }).catch((err: Error) => {
-                  console.error('Navigation failed:', err.message);
-                });
-              })
+            // 快捷服务区域
+            Column() {
+              Text('快捷服务')
+                .fontSize(16)
+                .fontWeight(FontWeight.Medium)
+                .fontColor('#FFFFFF')
+                .width('90%')
+                .margin({ bottom: 12 })
 
-              // 窗帘按钮
-              Column() {
-                Image($r('app.media.tabs_icon_curtain_select'))
-                  .width(40)
-                  .height(40)
-                Text('窗帘控制')
-                  .fontSize(14)
-                  .fontColor('#FFFFFF')
-                  .margin({ top: 8 })
-              }
-              .width(90)
-              .height(100)
-              .borderRadius(16)
-              .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
-              .justifyContent(FlexAlign.Center)
-              .margin({ left: 15, right: 15 })
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/CurtainControl' }).catch((err: Error) => {
-                  console.error('Navigation failed:', err.message);
-                });
-              })
+              // 第一行：请勿打扰 和 清理房间
+              Row() {
+                // 请勿打扰
+                Stack() {
+                  Image($r('app.media.home_layer_scenemode'))
+                    .width('100%')
+                    .height('100%')
+                    .borderRadius(12)
 
-              // 服务按钮
-              Column() {
-                Image($r('app.media.tabs_icon_service_select'))
-                  .width(40)
-                  .height(40)
-                Text('服务控制')
-                  .fontSize(14)
-                  .fontColor('#FFFFFF')
-                  .margin({ top: 8 })
+                  Row() {
+                    Image($r('app.media.service_icon_do_not_disturb'))
+                      .width(28)
+                      .height(28)
+                      .objectFit(ImageFit.Contain)
+                      .margin({ right: 8 })
+
+                    Text('请勿打扰')
+                      .fontSize(14)
+                      .fontColor('rgb(88, 53, 23)')
+                  }
+                  .width('100%')
+                  .height('100%')
+                  .justifyContent(FlexAlign.Center)
+                }
+                .width('48%')
+                .height(64)
+                .onClick(() => {
+                  this.viewModel.toggleDoNotDisturb();
+                })
+
+                // 清理房间
+                Stack() {
+                  Image($r('app.media.home_layer_scenemode'))
+                    .width('100%')
+                    .height('100%')
+                    .borderRadius(12)
+
+                  Row() {
+                    Image($r('app.media.service_icon_clean_room'))
+                      .width(28)
+                      .height(28)
+                      .objectFit(ImageFit.Contain)
+                      .margin({ right: 8 })
+
+                    Text('清理房间')
+                      .fontSize(14)
+                      .fontColor('rgb(88, 53, 23)')
+                  }
+                  .width('100%')
+                  .height('100%')
+                  .justifyContent(FlexAlign.Center)
+                }
+                .width('48%')
+                .height(64)
+                .onClick(() => {
+                  this.viewModel.toggleCleanRoom();
+                })
               }
-              .width(90)
-              .height(100)
-              .borderRadius(16)
-              .backgroundBlurStyle(BlurStyle.BACKGROUND_THIN)
-              .justifyContent(FlexAlign.Center)
-              .onClick(() => {
-                router.pushUrl({ url: 'pages/ServiceControl' }).catch((err: Error) => {
-                  console.error('Navigation failed:', err.message);
-                });
-              })
+              .width('100%')
+              .justifyContent(FlexAlign.SpaceBetween)
+              .margin({ bottom: 12 })
+
+              // 第二行：晚安模式
+              Stack() {
+                Image($r('app.media.home_layer_night'))
+                  .width('100%')
+                  .height('100%')
+                  .borderRadius(12)
+
+                Row() {
+                  Image($r('app.media.home_icon_night_left'))
+                    .width(28)
+                    .height(28)
+                    .objectFit(ImageFit.Contain)
+                    .margin({ right: 8 })
+
+                  Text('晚安模式')
+                    .fontSize(14)
+                    .fontColor('rgb(88, 53, 23)')
+
+                  Blank()
+
+                  Image($r('app.media.home_icon_night_right'))
+                    .width(52)
+                    .height(28)
+                    .objectFit(ImageFit.Contain)
+                }
+                .width('90%')
+                .height('100%')
+              }
+              .width('100%')
+              .height(64)
             }
             .width('90%')
-            .justifyContent(FlexAlign.Center)
             .margin({ bottom: 40 })
           }
         }
@@ -397,15 +426,15 @@ struct MainDashboard {
   private getSceneName(mode: string): string {
     switch (mode) {
       case 'bright':
-        return '明亮';
+        return '明亮模式';
       case 'soft':
-        return '柔和';
+        return '柔和模式';
       case 'read':
-        return '阅读';
+        return '阅读模式';
       case 'warm':
-        return '温馨';
+        return '温馨模式';
       case 'sleep':
-        return '睡眠';
+        return '睡眠模式';
       default:
         return '';
     }
