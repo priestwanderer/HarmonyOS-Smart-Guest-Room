@@ -2,6 +2,7 @@ import { RoomViewModel } from '../viewmodel/RoomViewModel';
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
 import preferences from '@ohos.data.preferences';
+import hilog from '@ohos.hilog';
 
 @Entry
 @ComponentV2
@@ -9,12 +10,14 @@ struct Index {
   @Local roomNumber: string = '';
   @Local firstName: string = '';
   @Local viewModel: RoomViewModel = new RoomViewModel();
-  @Local useBackendValidation: boolean = false;
   @Local rememberInfo: boolean = false; // 是否记住我的信息
+  @Local isLoading: boolean = false;
+  @Local isInitialized: boolean = false;
 
   async aboutToAppear() {
     await this.viewModel.init(getContext());
     await this.loadSavedInfo();
+    this.isInitialized = true;
   }
 
   // 加载保存的信息
@@ -162,32 +165,28 @@ struct Index {
                 .fontColor('#FFFFFF')
                 .margin({ left: 8 })
             }
-            .margin({ right: 24 })
-
-            // 后端校验
-            Row() {
-              Text('后端校验')
-                .fontSize(14)
-                .fontColor('#FFFFFF')
-                .margin({ right: 12 })
-
-              Toggle({
-                type: ToggleType.Checkbox,
-                isOn: this.useBackendValidation
-              })
-                .width(32)
-                .height(20)
-                .onChange((isOn: boolean) => {
-                  this.useBackendValidation = isOn;
-                })
-            }
           }
           .width('100%')
           .justifyContent(FlexAlign.Center)
-          .margin({ bottom: 24 })
+          .margin({ bottom: 16 })
+
+          // 跳过登录（测试用）- 后端修复后请删除此选项
+          Text('[跳过登录]')
+            .fontSize(12)
+            .fontColor('rgba(255,255,255,0.6)')
+            .decoration({ type: TextDecorationType.Underline })
+            .onClick(() => {
+              // 跳过登录，直接跳转
+              router.pushUrl({
+                url: 'pages/MainDashboard'
+              }).catch((err: Error) => {
+                hilog.error(0x0, 'Index', `Navigation failed: ${err.message}`);
+              });
+            })
+            .margin({ bottom: 16 })
 
           // 登录按钮
-          Button('立即入住')
+          Button(this.isLoading ? '登录中...' : '立即入住')
             .width(200)
             .height(48)
             .fontSize(18)
@@ -195,58 +194,61 @@ struct Index {
             .fontColor('#000000')
             .backgroundColor(Color.White)
             .borderRadius(24)
-            .enabled(this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0)
+            .enabled(this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0 && this.isInitialized && !this.isLoading)
             .onClick(async () => {
-              if (this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0) {
-                this.viewModel.setRoomNumber(this.roomNumber.trim());
-                this.viewModel.setUseBackendValidation(this.useBackendValidation);
-
+              hilog.info(0x0, 'Index', 'login button clicked');
+              if (this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0 && this.isInitialized) {
+                hilog.info(0x0, 'Index', `login with roomNumber: ${this.roomNumber.trim()}, firstName: ${this.firstName.trim()}`);
+                this.isLoading = true;
                 // 如果记住信息，先保存
                 if (this.rememberInfo) {
                   await this.saveInfo();
                 }
 
-                const ok = await this.viewModel.login(this.roomNumber.trim(), this.firstName.trim());
-                if (!ok) {
-                  promptAction.showDialog({
-                    title: '登录失败',
-                    message: '请检查房号和姓名',
-                    buttons: [
-                      {
-                        text: '确定',
-                        color: '#000000'
-                      }
-                    ]
-                  }).catch((err?: Error) => {
-                    if (err) {
-                      console.error('Dialog failed:', err.message);
-                    }
-                  });
-                  return;
-                }
-                // 登录成功弹窗
-                promptAction.showDialog({
-                  title: '登录成功',
-                  message: '欢迎进入智慧客房',
-                  buttons: [
-                    {
-                      text: '确定',
-                      color: '#000000'
-                    }
-                  ]
-                }).then(() => {
-                  // Navigate to main dashboard
+                try {
+                  const ok = await this.viewModel.login(this.roomNumber.trim(), this.firstName.trim());
+                  hilog.info(0x0, 'Index', `login result: ${ok}`);
+                  this.isLoading = false;
+                  if (!ok) {
+                    hilog.info(0x0, 'Index', 'login failed, showing dialog');
+                    promptAction.showDialog({
+                      title: '登录失败',
+                      message: '请检查房号和姓名',
+                      buttons: [
+                        {
+                          text: '确定',
+                          color: '#000000'
+                        }
+                      ]
+                    });
+                    return;
+                  }
+                  // 登录成功，直接跳转
+                  hilog.info(0x0, 'Index', 'login success, navigating to MainDashboard');
                   router.pushUrl({
                     url: 'pages/MainDashboard',
                     params: {
                       roomNumber: this.roomNumber.trim()
                     }
                   }).catch((err: Error) => {
-                    console.error('Navigation failed:', err.message);
+                    hilog.error(0x0, 'Index', `Navigation failed: ${err.message}`);
                   });
-                }).catch((err: Error) => {
-                  console.error('Dialog failed:', err.message);
-                });
+                } catch (err) {
+                  hilog.error(0x0, 'Index', `login exception: ${String(err)}`);
+                  this.isLoading = false;
+                  promptAction.showDialog({
+                    title: '登录失败',
+                    message: '网络请求失败，请检查网络连接',
+                    buttons: [
+                      {
+                        text: '确定',
+                        color: '#000000'
+                      }
+                    ]
+                  });
+                }
+              } else {
+                hilog.info(0x0, 'Index', 'input validation failed or not initialized');
               }
             })
         }

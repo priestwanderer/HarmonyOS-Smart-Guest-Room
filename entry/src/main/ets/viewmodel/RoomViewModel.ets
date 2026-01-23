@@ -18,7 +18,6 @@ export class RoomViewModel {
   private airDeviceId: number = 0;
   private lightModeIds: LightModeIds = new LightModeIds();
   private temperatureTimer?: number;
-  private useBackendValidation: boolean = true; // 控制是否使用后端校验
 
   async init(context: Context): Promise<void> {
     await this.api.init(context);
@@ -30,20 +29,12 @@ export class RoomViewModel {
 
   async login(roomNo: string, firstName: string): Promise<boolean> {
     try {
-      if (this.useBackendValidation) {
-        // 使用后端校验
-        await this.api.login(roomNo, firstName);
-      }
-      this.roomModel.roomNumber = roomNo;
+      await this.api.login(roomNo, firstName);
       return true;
     } catch (err) {
       hilog.error(0x0, 'RoomViewModel', `login failed: ${String(err)}`);
       return false;
     }
-  }
-
-  setUseBackendValidation(useBackend: boolean): void {
-    this.useBackendValidation = useBackend;
   }
 
   async loadRoomState(roomNo?: string): Promise<void> {
