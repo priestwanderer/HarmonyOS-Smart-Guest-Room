@@ -1,6 +1,7 @@
 import { RoomViewModel } from '../viewmodel/RoomViewModel';
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
+import preferences from '@ohos.data.preferences';
 
 @Entry
 @ComponentV2
@@ -14,6 +15,28 @@ struct ServiceControl {
       this.viewModel.setRoomNumber(this.roomNumber);
     }
     await this.viewModel.loadRoomState();
+  }
+
+  // 退出登录
+  async logout(): Promise<void> {
+    // 清除保存的信息
+    try {
+      const prefs = await preferences.getPreferences(getContext(this), 'loginInfo');
+      await prefs.delete('roomNumber');
+      await prefs.delete('firstName');
+      await prefs.delete('rememberInfo');
+      await prefs.flush();
+    } catch (err) {
+      console.error('Failed to clear saved info:', err);
+    }
+
+    // 重置状态
+    this.viewModel.reset();
+
+    // 返回登录页
+    router.replaceUrl({ url: 'pages/Index' }).catch((err: Error) => {
+      console.error('Navigation failed:', err.message);
+    });
   }
 
   build() {
@@ -191,10 +214,7 @@ struct ServiceControl {
             .height(56)
             .margin({ bottom: 40 })
             .onClick(() => {
-              this.viewModel.reset();
-              router.replaceUrl({
-                url: 'pages/Index'
-              });
+              this.logout();
             })
           }
         }

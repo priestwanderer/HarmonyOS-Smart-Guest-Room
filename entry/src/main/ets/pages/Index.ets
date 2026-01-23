@@ -1,6 +1,7 @@
 import { RoomViewModel } from '../viewmodel/RoomViewModel';
 import router from '@ohos.router';
 import promptAction from '@ohos.promptAction';
+import preferences from '@ohos.data.preferences';
 
 @Entry
 @ComponentV2
@@ -8,10 +9,56 @@ struct Index {
   @Local roomNumber: string = '';
   @Local firstName: string = '';
   @Local viewModel: RoomViewModel = new RoomViewModel();
-  @Local useBackendValidation: boolean = true; // 控制是否使用后端校验
+  @Local useBackendValidation: boolean = false;
+  @Local rememberInfo: boolean = false; // 是否记住我的信息
 
   async aboutToAppear() {
     await this.viewModel.init(getContext());
+    await this.loadSavedInfo();
+  }
+
+  // 加载保存的信息
+  async loadSavedInfo(): Promise<void> {
+    try {
+      const prefs = await preferences.getPreferences(getContext(this), 'loginInfo');
+      const savedRoomNumber: string = await prefs.get('roomNumber', '') as string;
+      const savedFirstName: string = await prefs.get('firstName', '') as string;
+      const savedRemember: boolean = await prefs.get('rememberInfo', false) as boolean;
+
+      if (savedRemember && savedRoomNumber && savedFirstName) {
+        this.roomNumber = savedRoomNumber;
+        this.firstName = savedFirstName;
+        this.rememberInfo = true;
+      }
+    } catch (err) {
+      console.error('Failed to load saved info:', err);
+    }
+  }
+
+  // 保存信息
+  async saveInfo(): Promise<void> {
+    try {
+      const prefs = await preferences.getPreferences(getContext(this), 'loginInfo');
+      await prefs.put('roomNumber', this.roomNumber.trim());
+      await prefs.put('firstName', this.firstName.trim());
+      await prefs.put('rememberInfo', this.rememberInfo);
+      await prefs.flush();
+    } catch (err) {
+      console.error('Failed to save info:', err);
+    }
+  }
+
+  // 清除保存的信息
+  async clearSavedInfo(): Promise<void> {
+    try {
+      const prefs = await preferences.getPreferences(getContext(this), 'loginInfo');
+      await prefs.delete('roomNumber');
+      await prefs.delete('firstName');
+      await prefs.delete('rememberInfo');
+      await prefs.flush();
+    } catch (err) {
+      console.error('Failed to clear saved info:', err);
+    }
   }
 
   build() {
@@ -24,136 +71,191 @@ struct Index {
 
       // 内容区域
       Column() {
-        // Logo或标题
-        Image($r('app.media.home_text_smart_guest_room'))
-          .width(200)
-          .height(60)
-          .margin({ top: 60, bottom: 80 })
-          .objectFit(ImageFit.Contain)
-
-        // 欢迎文字
-        Text('欢迎体验智慧酒店')
-          .fontSize(24)
+        // 标题
+        Text('广科·未来酒店')
+          .fontSize(32)
           .fontWeight(FontWeight.Bold)
           .fontColor('#FFFFFF')
-          .margin({ bottom: 60 })
+          .margin({ top: 60, bottom: 16 })
 
-        // 客房号输入
-        Column() {
-          Row() {
-            Image($r('app.media.icon_input_room'))
-              .width(24)
-              .height(24)
-              .margin({ right: 12 })
-
-            TextInput({ placeholder: '请输入客房号' })
-              .width(250)
-              .height(48)
-              .fontSize(16)
-              .backgroundColor(Color.White)
-              .borderRadius(8)
-              .onChange((value: string) => {
-                this.roomNumber = value;
-              })
-          }
-          .width('100%')
-          .height(48)
-          .padding({ left: 16, right: 16 })
-          .borderRadius(8)
-          .backgroundColor(Color.White)
-        }
-        .margin({ bottom: 40 })
-
-        // 用户名输入
-        Column() {
-          Row() {
-            Image($r('app.media.icon_input_user'))
-              .width(24)
-              .height(24)
-              .margin({ right: 12 })
-
-            TextInput({ placeholder: '请输入姓名' })
-              .width(250)
-              .height(48)
-              .fontSize(16)
-              .backgroundColor(Color.White)
-              .borderRadius(8)
-              .onChange((value: string) => {
-                this.firstName = value;
-              })
-          }
-          .width('100%')
-          .height(48)
-          .padding({ left: 16, right: 16 })
-          .borderRadius(8)
-          .backgroundColor(Color.White)
-        }
-        .margin({ bottom: 40 })
-
-        // 后端校验开关
-        Row() {
-          Text('后端校验')
-            .fontSize(16)
-            .fontColor('#FFFFFF')
-            .margin({ right: 16 })
-
-          Toggle({
-            type: ToggleType.Checkbox,
-            isOn: this.useBackendValidation
-          })
-            .width(40)
-            .height(24)
-            .onChange((isOn: boolean) => {
-              this.useBackendValidation = isOn;
-            })
-        }
-        .width('100%')
-        .justifyContent(FlexAlign.Center)
-        .margin({ bottom: 20 })
-
-        // 登录按钮
-        Button('进入客房')
-          .width(200)
-          .height(48)
+        // 欢迎文字
+        Text('华为ICT学院专属智臻旅居体验')
           .fontSize(18)
-          .fontWeight(FontWeight.Medium)
-          .fontColor('#000000')
-          .backgroundColor(Color.White)
-          .borderRadius(24)
-          .enabled(this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0)
-          .onClick(async () => {
-            if (this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0) {
-              this.viewModel.setRoomNumber(this.roomNumber.trim());
-              this.viewModel.setUseBackendValidation(this.useBackendValidation);
-              const ok = await this.viewModel.login(this.roomNumber.trim(), this.firstName.trim());
-              if (!ok) {
+          .fontWeight(FontWeight.Regular)
+          .fontColor('#FFFFFF')
+          .margin({ bottom: 40 })
+
+        // 磨砂玻璃容器
+        Column() {
+          // 客房号输入
+          Column() {
+            Row() {
+              Image($r('app.media.icon_input_room'))
+                .width(24)
+                .height(24)
+                .margin({ right: 12 })
+
+              TextInput({ placeholder: '请输入客房号' })
+                .width(200)
+                .height(44)
+                .fontSize(16)
+                .fontColor('#FFFFFF')
+                .backgroundColor(Color.Transparent)
+                .placeholderColor('#FFFFFF')
+                .onChange((value: string) => {
+                  this.roomNumber = value;
+                })
+            }
+            .width('100%')
+            .height(44)
+            .padding({ left: 12, right: 12 })
+            .backgroundColor('rgba(255, 255, 255, 0.15)')
+            .borderRadius(8)
+          }
+          .width(280)
+          .margin({ bottom: 24 })
+
+          // 用户名输入
+          Column() {
+            Row() {
+              Image($r('app.media.icon_input_user'))
+                .width(24)
+                .height(24)
+                .margin({ right: 12 })
+
+              TextInput({ placeholder: '请输入姓名' })
+                .width(200)
+                .height(44)
+                .fontSize(16)
+                .fontColor('#FFFFFF')
+                .backgroundColor(Color.Transparent)
+                .placeholderColor('#FFFFFF')
+                .onChange((value: string) => {
+                  this.firstName = value;
+                })
+            }
+            .width('100%')
+            .height(44)
+            .padding({ left: 12, right: 12 })
+            .backgroundColor('rgba(255, 255, 255, 0.15)')
+            .borderRadius(8)
+          }
+          .width(280)
+          .margin({ bottom: 24 })
+
+          // 选项行
+          Row() {
+            // 记住我的信息
+            Row() {
+              Toggle({
+                type: ToggleType.Checkbox,
+                isOn: this.rememberInfo
+              })
+                .width(20)
+                .height(20)
+                .onChange((isOn: boolean) => {
+                  this.rememberInfo = isOn;
+                })
+
+              Text('记住我的信息')
+                .fontSize(14)
+                .fontColor('#FFFFFF')
+                .margin({ left: 8 })
+            }
+            .margin({ right: 24 })
+
+            // 后端校验
+            Row() {
+              Text('后端校验')
+                .fontSize(14)
+                .fontColor('#FFFFFF')
+                .margin({ right: 12 })
+
+              Toggle({
+                type: ToggleType.Checkbox,
+                isOn: this.useBackendValidation
+              })
+                .width(32)
+                .height(20)
+                .onChange((isOn: boolean) => {
+                  this.useBackendValidation = isOn;
+                })
+            }
+          }
+          .width('100%')
+          .justifyContent(FlexAlign.Center)
+          .margin({ bottom: 24 })
+
+          // 登录按钮
+          Button('立即入住')
+            .width(200)
+            .height(48)
+            .fontSize(18)
+            .fontWeight(FontWeight.Medium)
+            .fontColor('#000000')
+            .backgroundColor(Color.White)
+            .borderRadius(24)
+            .enabled(this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0)
+            .onClick(async () => {
+              if (this.roomNumber.trim().length >= 3 && this.firstName.trim().length > 0) {
+                this.viewModel.setRoomNumber(this.roomNumber.trim());
+                this.viewModel.setUseBackendValidation(this.useBackendValidation);
+
+                // 如果记住信息，先保存
+                if (this.rememberInfo) {
+                  await this.saveInfo();
+                }
+
+                const ok = await this.viewModel.login(this.roomNumber.trim(), this.firstName.trim());
+                if (!ok) {
+                  promptAction.showDialog({
+                    title: '登录失败',
+                    message: '请检查房号和姓名',
+                    buttons: [
+                      {
+                        text: '确定',
+                        color: '#000000'
+                      }
+                    ]
+                  }).catch((err?: Error) => {
+                    if (err) {
+                      console.error('Dialog failed:', err.message);
+                    }
+                  });
+                  return;
+                }
+                // 登录成功弹窗
                 promptAction.showDialog({
-                  title: '登录失败',
-                  message: '请检查房号和姓名',
+                  title: '登录成功',
+                  message: '欢迎进入智慧客房',
                   buttons: [
                     {
                       text: '确定',
                       color: '#000000'
                     }
                   ]
-                }).catch((err?: Error) => {
-                  if (err) {
-                    console.error('Dialog failed:', err.message);
-                  }
+                }).then(() => {
+                  // Navigate to main dashboard
+                  router.pushUrl({
+                    url: 'pages/MainDashboard',
+                    params: {
+                      roomNumber: this.roomNumber.trim()
+                    }
+                  }).catch((err: Error) => {
+                    console.error('Navigation failed:', err.message);
+                  });
+                }).catch((err: Error) => {
+                  console.error('Dialog failed:', err.message);
                 });
-                return;
               }
-              // Navigate to main dashboard
-              router.pushUrl({
-                url: 'pages/MainDashboard',
-                params: {
-                  roomNumber: this.roomNumber.trim()
-                }
-              }).catch((err: Error) => {
-                console.error('Navigation failed:', err.message);
-              });
-            }
-          })
+            })
+        }
+        .width(320)
+        .padding(24)
+        .backgroundColor('rgba(0, 0, 0, 0.3)')
+        .backdropBlur(20)
+        .borderRadius(24)
+        .margin({ bottom: 40 })
       }
       .width('100%')
       .height('100%')
