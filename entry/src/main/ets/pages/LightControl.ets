@@ -8,6 +8,27 @@ struct LightControl {
   @Local viewModel: RoomViewModel = new RoomViewModel();
   @Param roomNumber: string = '';
 
+  // 静态灯光列表 - 使用@Local使其响应式
+  @Local lights: LightState[] = [
+    this.createLight('1', '洗漱间', false),
+    this.createLight('2', '衣柜灯', false),
+    this.createLight('3', '落地灯', false),
+    this.createLight('4', '吧灯', false),
+    this.createLight('5', '书桌灯', false),
+    this.createLight('6', '左阅读灯', false),
+    this.createLight('7', '右阅读灯', false),
+    this.createLight('8', '排风扇', false),
+    this.createLight('9', '廊灯', false),
+  ];
+
+  private createLight(id: string, name: string, isOpened: boolean): LightState {
+    const light = new LightState();
+    light.id = id;
+    light.name = name;
+    light.isOpened = isOpened;
+    return light;
+  }
+
   async aboutToAppear() {
     await this.viewModel.init(getContext());
     if (this.roomNumber) {
@@ -152,7 +173,7 @@ struct LightControl {
 
               // 2列Grid布局
               Grid() {
-                ForEach(this.viewModel.roomModel.lights, (light: LightState) => {
+                ForEach(this.lights, (light: LightState) => {
                   GridItem() {
                     Row() {
                       // 图标
@@ -177,23 +198,22 @@ struct LightControl {
                         .height(24)
                         .objectFit(ImageFit.Contain)
                         .onClick(() => {
-                          this.viewModel.setLightState(light.id, !light.isOpened);
+                          // 直接修改@ObservedV2对象的属性
+                          light.isOpened = !light.isOpened;
                         })
                     }
                     .width('100%')
                     .height(48)
-                    .padding({ left: 12, right: 12 })
-                    .backgroundColor('rgba(255, 255, 255, 0.2)')
-                    .borderRadius(12)
+                    .justifyContent(FlexAlign.Center)
                   }
                 })
               }
               .columnsTemplate('1fr 1fr')
-              .rowsTemplate('1fr')
+              .rowsTemplate('1fr 1fr 1fr 1fr 1fr')
               .columnsGap(12)
               .rowsGap(12)
               .width('100%')
-              .height(180)
+              .height(300)
             }
             .width('90%')
             .padding(16)
@@ -298,9 +318,9 @@ struct LightControl {
    */
   private getLightIcon(name: string): Resource {
     switch (name) {
-      case '洗手间':
+      case '洗漱间':
         return $r('app.media.light_icon_washroom');
-      case '衣柜':
+      case '衣柜灯':
         return $r('app.media.light_icon_wardrobe');
       case '落地灯':
         return $r('app.media.light_icon_bar_lamp');
@@ -312,10 +332,10 @@ struct LightControl {
         return $r('app.media.light_icon_right_left_desk_read');
       case '右阅读灯':
         return $r('app.media.light_icon_right_left_desk_read');
-      case '走廊':
-        return $r('app.media.light_icon_corrid_lights');
       case '排风扇':
         return $r('app.media.light_icon_exhaust_fan');
+      case '廊灯':
+        return $r('app.media.light_icon_corrid_lights');
       default:
         return $r('app.media.light_icon_soft');
     }

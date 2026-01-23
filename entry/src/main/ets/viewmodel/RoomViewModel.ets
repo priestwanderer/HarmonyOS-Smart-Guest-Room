@@ -216,13 +216,28 @@ export class RoomViewModel {
     this.lightModeIds = this.mapLightModeIds(lightModes);
 
     const lights = hardware?.lights || [];
-    this.roomModel.lights = lights.map(lightItem => {
-      const light = new LightState();
-      light.id = String(lightItem.id);
-      light.name = lightItem.name;
-      light.isOpened = false;
-      return light;
-    });
+    if (lights.length === 0) {
+      // 默认灯光列表
+      this.roomModel.lights = [
+        { id: '1', name: '洗漱间', isOpened: false } as LightState,
+        { id: '2', name: '衣柜灯', isOpened: false } as LightState,
+        { id: '3', name: '落地灯', isOpened: false } as LightState,
+        { id: '4', name: '吧灯', isOpened: false } as LightState,
+        { id: '5', name: '书桌灯', isOpened: false } as LightState,
+        { id: '6', name: '左阅读灯', isOpened: false } as LightState,
+        { id: '7', name: '右阅读灯', isOpened: false } as LightState,
+        { id: '8', name: '排风扇', isOpened: false } as LightState,
+        { id: '9', name: '廊灯', isOpened: false } as LightState,
+      ];
+    } else {
+      this.roomModel.lights = lights.map(lightItem => {
+        const light = new LightState();
+        light.id = String(lightItem.id);
+        light.name = lightItem.name;
+        light.isOpened = false;
+        return light;
+      });
+    }
 
     if (state) {
       const clean = state.qingli;
