@@ -161,11 +161,14 @@ export class ApiService {
   }
 
   async login(roomNo: string, firstName: string): Promise<string> {
+    hilog.info(0x0, 'ApiService', `login request: roomNo=${roomNo}, firstName=${firstName}`);
     const payload: LoginRequest = {
       roomNo,
       firstName
     };
+    // 根据接口文档，data 直接返回 token 字符串
     const token = await this.request<string>('/api/sso/login', payload, false);
+    hilog.info(0x0, 'ApiService', `login success, token=${token ? token.substring(0, 20) + '...' : 'empty'}`);
     await this.setRoomNo(roomNo);
     await this.setToken(token);
     return token;
@@ -209,6 +212,9 @@ export class ApiService {
       if (needAuth && this.token) {
         headers.Authorization = `Bearer ${this.token}`;
       }
+      const authInfo = headers.Authorization ? `Bearer ***${this.token.length}` : 'none';
+      hilog.info(0x0, 'ApiService', `request start: path=${path}, needAuth=${needAuth}, auth=${authInfo}`);
+      hilog.info(0x0, 'ApiService', `request payload: ${JSON.stringify(payload)}`);
 
       const options: http.HttpRequestOptions = {
         method: http.RequestMethod.POST,
@@ -221,12 +227,17 @@ export class ApiService {
       };
 
       const response: http.HttpResponse = await this.httpClient.request(url, options);
+      hilog.info(0x0, 'ApiService', `responseCode: ${response.responseCode}`);
+
       let body: ApiResponse<T>;
       const result = response.result as object | string;
+      hilog.info(0x0, 'ApiService', `result type: ${typeof result}, result: ${JSON.stringify(result).substring(0, 300)}`);
+
       if (typeof result === 'string') {
         try {
           body = JSON.parse(result || '{}') as ApiResponse<T>;
         } catch (err) {
+          hilog.error(0x0, 'ApiService', `JSON parse failed: ${result}`);
           throw new Error(`Invalid response: ${String(err)}`);
         }
       } else {
@@ -235,9 +246,21 @@ export class ApiService {
       if (response.responseCode >= 400) {
         throw new Error(`HTTP ${response.responseCode}`);
       }
+
+      // 登录接口：直接返回 data 中的 token 字符串
+      if (path === '/api/sso/login' && body.code === 0) {
+        const tokenData = body.data;
+        if (typeof tokenData === 'string' && tokenData.length > 0) {
+          hilog.info(0x0, 'ApiService', `login success, token length: ${tokenData.length}`);
+          return tokenData as T;
+        }
+      }
+
       if (body.code !== 0) {
+        hilog.error(0x0, 'ApiService', `api error: code=${body.code}, msg=${body.msg}`);
         throw new Error(body.msg || 'api error');
       }
+      hilog.info(0x0, 'ApiService', `request success`);
       return body.data;
     } catch (err) {
       hilog.error(0x0, 'ApiService', `request failed: ${String(err)}`);
